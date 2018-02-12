@@ -16,8 +16,7 @@ import time
 import sys
 import subprocess
 import argparse
-import datetime
-
+\
 def main(startyear, endyear, overwrite):
     '''
     Main function, call experiment 1 and experiment 2 functions
@@ -58,7 +57,6 @@ def create_dimensions_netcdf(ncfile, dtobj, lat, lon):
     timevar.long_name = 'Time'
     timevar.axis = 'T'
     # convert dtobj to num
-    #dtobj = dtobj + datetime.timedelta(hours=12)
     timevar[:] = nc_date2num(dtobj,
                              units=ncfile['time'].units,
                              calendar=ncfile['time'].calendar)
