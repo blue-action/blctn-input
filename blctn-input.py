@@ -29,9 +29,8 @@ def main(startyear, endyear, overwrite):
     '''
     exp1(startyear, endyear, overwrite)
     exp2(startyear, endyear, overwrite)
-    exp3_4(startyear, endyear, expno=3, overwrite)
-    exp3_4(startyear, endyear, expno=3, overwrite)
-
+    exp3_4(startyear, endyear, 3, overwrite)
+    exp3_4(startyear, endyear, 4, overwrite)
 
 
 def create_dimensions_netcdf(ncfile, dtobj, lat, lon):
