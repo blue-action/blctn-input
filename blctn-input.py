@@ -29,6 +29,9 @@ def main(startyear, endyear, overwrite):
     '''
     exp1(startyear, endyear, overwrite)
     exp2(startyear, endyear, overwrite)
+    exp3_4(startyear, endyear, expno=3, overwrite)
+    exp3_4(startyear, endyear, expno=3, overwrite)
+
 
 
 def create_dimensions_netcdf(ncfile, dtobj, lat, lon):
@@ -218,6 +221,73 @@ def exp1(startyear, endyear, overwrite=False):
         # output filenames
         filename_sic_out = os.path.join('exp1', siconc_bsout + str(yr) + '.nc')
         filename_tos_out = os.path.join('exp1', tos_bsout + str(yr) + '.nc')
+        # check if existing file can be used
+        if (all(os.path.isfile(fl) for fl in
+                [filename_sic_out, filename_tos_out]) and not overwrite):
+            print('Keeping existing files: ' + filename_sic_out + ' and ' +
+                  filename_tos_out)
+            continue
+        # open output netCDF files
+        ncfile_tos_in = Dataset(filename_tos_in, 'r')
+        ncfile_sic_in = Dataset(filename_sic_in, 'r')
+        # open output netCDF files
+        ncfile_tos = Dataset(filename_tos_out, 'w')
+        ncfile_sic = Dataset(filename_sic_out, 'w')
+        # convert time to datetimeobject
+        dtobj = nc_num2date(ncfile_tos_in['time'][:],
+                            units=ncfile_tos_in['time'].units,
+                            calendar=ncfile_tos_in['time'].calendar)
+        sst = ncfile_tos_in.variables['tos'][:]
+        siconc = ncfile_sic_in.variables['siconc'][:]
+        lat = ncfile_tos_in.variables['latitude'][:]
+        lon = ncfile_tos_in.variables['longitude'][:]
+        # adjust sst and sic per instructions
+        sst, siconc = sst_sic_adjustment(sst, siconc,
+                                         units_sst='C', units_sic='perc')
+        # write sst
+        ncfile_tos = create_dimensions_netcdf(ncfile_tos, dtobj, lat, lon)
+        ncfile_tos = create_variable_sst(ncfile_tos, sst)
+        # write sic
+        ncfile_sic = create_dimensions_netcdf(ncfile_sic, dtobj, lat, lon)
+        ncfile_sic = create_variable_sic(ncfile_sic, siconc)
+        # close netCDF files
+        ncfile_tos.close()
+        ncfile_sic.close()
+        ncfile_tos_in.close()
+        ncfile_sic_in.close()
+
+def exp3_4(startyear, endyear, expno, overwrite=False):
+    '''
+    create input files for Blue Action experiment 3 and/or 4
+
+    Args:
+        startyear (int):      First year to use in calculations
+        endyear (int):        Stop calculations in the beginning of this year
+        expno (int):          Experiment number (3 or 4)
+        overwrite (bool):     Force overwriting existing files
+    '''
+    if expno not in [3, 4]:
+        print('experiment number should be 3 or 4, returning...')
+        return
+    # basestring input files
+    siconc_bs = ("siconc_input4MIPs_SSTsAndSeaIce_HighResMIP_MOHC-" +
+                 "HadISST-2-2-0-0-0_gn_")
+    tos_bs = ("tos_EXP" + str(expno) + "-HadISST-2-2-0-0-0_gn_")
+    # basestring output files
+    tos_bsout = 'HadISST2_prelim_0to360_alldays_sst_'
+    siconc_bsout = 'HadISST2_prelim_0to360_alldays_sic_'
+    # create output directory if needed
+    if not os.path.exists('exp' + str(expno)):
+        os.makedirs('exp' + str(expno))
+    # loop over all years
+    for yr in range(int(startyear), int(endyear)):
+        # input filenames
+        timestr = str(yr) + '0101-' + str(yr) + '1231'
+        filename_sic_in = os.path.join('siconc', siconc_bs + timestr + '.nc')
+        filename_tos_in = os.path.join('input', 'EXP' + str(expno), tos_bs + timestr + '.nc')
+        # output filenames
+        filename_sic_out = os.path.join('exp' + str(expno), siconc_bsout + str(yr) + '.nc')
+        filename_tos_out = os.path.join('exp' + str(expno), tos_bsout + str(yr) + '.nc')
         # check if existing file can be used
         if (all(os.path.isfile(fl) for fl in
                 [filename_sic_out, filename_tos_out]) and not overwrite):
